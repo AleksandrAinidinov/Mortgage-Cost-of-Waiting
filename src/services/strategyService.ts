@@ -27,62 +27,73 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
       ? ((currentRate - bestOfferRate) / 100) * remainingBalance / 12
       : 0;
 
-  // ── 2. Cost of Waiting ──────────────────────────────────────────────
-  // Total extra interest the user pays by waiting `waitMonths` before acting.
+  // ── 2. Cost of Waiting (The "Bleed") ───────────────────────────────
   const totalCostOfWaiting = monthlyDiff * waitMonths;
+  const dailyCostOfWaiting = monthlyDiff / 30;
 
-  // ── 3. Delay Cost (Waiting + Penalty) ───────────────────────────────
-  // Full cost of inaction: opportunity cost of waiting PLUS the penalty
-  // to break the current mortgage.
+  // ── 3. The "Payback" Timeline ───────────────────────────────────────
+  // How many months to recover the penalty through monthly savings.
+  const paybackPeriodMonths =
+    monthlyDiff > 0 ? penaltyCost / monthlyDiff : Infinity;
+
+  // ── 4. Delay Cost (Waiting + Penalty) ───────────────────────────────
   const delayCost = totalCostOfWaiting + penaltyCost;
 
-  // ── 4. Estimated Savings From Switching ─────────────────────────────
-  // Total savings over the entire new offer term if the user switches now.
+  // ── 5. Estimated Savings From Switching ─────────────────────────────
   const totalSavings = monthlyDiff * (offerTermYears * 12);
 
-  // ── 5. Net Benefit of Switching Now ─────────────────────────────────
-  // Total savings minus the penalty cost of breaking the current mortgage.
+  // ── 6. Net Benefit of Switching Now ─────────────────────────────────
   const netBenefitNow = totalSavings - penaltyCost;
 
-  // ── 6. Break-Even (Hurdle) Rate ─────────────────────────────────────
-  // The rate the market would need to reach for waiting to make financial
-  // sense.
+  // ── 7. Break-Even (Hurdle) Rate ─────────────────────────────────────
   const breakEvenRate =
     remainingBalance > 0
       ? bestOfferRate - (delayCost / remainingBalance)
       : bestOfferRate;
 
-  // ── 7. Adjusted Benefit ─────────────────────────────────────────────
-  // After accounting for the cost of waiting, is switching still worth it?
+  // ── 8. Adjusted Benefit ─────────────────────────────────────────────
   const adjustedBenefit = netBenefitNow - totalCostOfWaiting;
 
-  // ── 8. Recommendation Logic ─────────────────────────────────────────
+  // ── 9. Recommendation Logic ─────────────────────────────────────────
   const recommendation: "LOCK_NOW" | "WAIT" =
     adjustedBenefit > 0 ? "LOCK_NOW" : "WAIT";
 
-  // ── 9. Human-Readable Summary ───────────────────────────────────────
+  // ── 10. Human-Readable Summary (Time-to-Decision Narrative) ────────
   const safeFmt = (v: number) => {
-    if (isNaN(v)) return "$0.00";
+    if (isNaN(v) || v === Infinity) return "---";
     return Math.abs(v).toLocaleString("en-CA", {
       style: "currency",
       currency: "CAD",
     });
   };
 
-  const action = recommendation === "LOCK_NOW" ? "LOCK NOW" : "WAIT";
+  const paybackTxt =
+    paybackPeriodMonths === Infinity
+      ? "never"
+      : `${round(paybackPeriodMonths)} months`;
+
+  const profitMonth =
+    paybackPeriodMonths === Infinity ? 0 : Math.ceil(paybackPeriodMonths);
 
   const summary =
-    `You are ${monthlyDiff >= 0 ? "overpaying" : "saving"} ~${safeFmt(monthlyDiff)}/month ` +
-    `at your current rate. ` +
-    `Switching now saves ${safeFmt(netBenefitNow)} over the new term, ` +
-    `but waiting ${waitMonths} months costs ${safeFmt(totalCostOfWaiting)}. ` +
-    `Adjusted benefit: ${safeFmt(adjustedBenefit)}. ` +
-    `Recommendation: ${action}.`;
+    `TIME-TO-DECISION ANALYSIS\n\n` +
+    `If you WAIT:\n` +
+    `• Losing ${safeFmt(dailyCostOfWaiting)}/day (${safeFmt(monthlyDiff)}/month)\n\n` +
+    `If you ACT:\n` +
+    `• Break even in ${paybackTxt}\n` +
+    (profitMonth > 0 ? `• Profit after month ${profitMonth}\n` : "") +
+    `\nVERDICT:\n` +
+    `${recommendation === "LOCK_NOW" ? "Lock now" : "Wait"} — ` +
+    `delay only makes sense if rates drop below ${round(breakEvenRate)}%\n\n` +
+    `⚠️ WARNING: If you exit or refinance before ${paybackTxt} → you lose money`;
 
   // ── Return ──────────────────────────────────────────────────────────
   return {
     monthlyCostOfWaiting: round(monthlyDiff),
     totalCostOfWaiting: round(totalCostOfWaiting),
+    dailyCostOfWaiting: round(dailyCostOfWaiting),
+    paybackPeriodMonths:
+      paybackPeriodMonths === Infinity ? -1 : round(paybackPeriodMonths),
     breakEvenRate: round(breakEvenRate),
     netBenefitNow: round(netBenefitNow),
     adjustedBenefit: round(adjustedBenefit),
@@ -93,5 +104,6 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
 
 /** Round to two decimal places to keep monetary values clean. */
 function round(value: number): number {
+  if (isNaN(value) || value === Infinity) return -1;
   return Math.round(value * 100) / 100;
 }

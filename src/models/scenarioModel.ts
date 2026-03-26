@@ -30,6 +30,12 @@ export interface AnalyzeResponse {
   /** Total dollar cost of waiting the specified number of months */
   totalCostOfWaiting: number;
 
+  /** The daily cost of procrastinating on this decision ($) */
+  dailyCostOfWaiting: number;
+
+  /** Months of lower payments needed to recover the penalty cost */
+  paybackPeriodMonths: number;
+
   /** The rate the market would need to reach for waiting to break even */
   breakEvenRate: number;
 
