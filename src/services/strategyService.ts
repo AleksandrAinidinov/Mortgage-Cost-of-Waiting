@@ -17,15 +17,14 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
     offerTermYears,
     penaltyCost,
     waitMonths,
+    totalInterestSavings: perchSavings,
+    netBenefit: perchNetBenefit,
   } = input;
 
-  // ── 1. Monthly Cost Difference ──────────────────────────────────────
-  // How much more the user pays per month staying at the current rate
-  // vs. switching to the best offer rate.
-  const monthlyDiff =
-    remainingBalance > 0
-      ? ((currentRate - bestOfferRate) / 100) * remainingBalance / 12
-      : 0;
+  // ── 1. Monthly Interest Savings ─────────────────────────────────────
+  // We derive monthly savings directly from Perch's calculated total interest difference.
+  const totalSavings = perchSavings ?? 0;
+  const monthlyDiff = totalSavings / (offerTermYears * 12);
 
   // ── 2. Cost of Waiting (The "Bleed") ───────────────────────────────
   const totalCostOfWaiting = monthlyDiff * waitMonths;
@@ -39,26 +38,26 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
   // ── 4. Delay Cost (Waiting + Penalty) ───────────────────────────────
   const delayCost = totalCostOfWaiting + penaltyCost;
 
-  // ── 5. Estimated Savings From Switching ─────────────────────────────
-  const totalSavings = monthlyDiff * (offerTermYears * 12);
+  // ── 5. Net Benefit of Switching Now ─────────────────────────────────
+  const netBenefitNow = perchNetBenefit !== undefined
+    ? perchNetBenefit
+    : totalSavings - penaltyCost;
 
-  // ── 6. Net Benefit of Switching Now ─────────────────────────────────
-  const netBenefitNow = totalSavings - penaltyCost;
-
-  // ── 7. Break-Even (Hurdle) Rate ─────────────────────────────────────
+  // ── 6. Break-Even (Hurdle) Rate ─────────────────────────────────────
+  // (Market rate must drop by this amount to offset the delay cost)
   const breakEvenRate =
     remainingBalance > 0
       ? bestOfferRate - (delayCost / remainingBalance)
       : bestOfferRate;
 
-  // ── 8. Adjusted Benefit ─────────────────────────────────────────────
+  // ── 7. Adjusted Benefit ─────────────────────────────────────────────
   const adjustedBenefit = netBenefitNow - totalCostOfWaiting;
 
-  // ── 9. Recommendation Logic ─────────────────────────────────────────
+  // ── 8. Recommendation Logic ─────────────────────────────────────────
   const recommendation: "LOCK_NOW" | "WAIT" =
     adjustedBenefit > 0 ? "LOCK_NOW" : "WAIT";
 
-  // ── 10. Human-Readable Summary (Time-to-Decision Narrative) ────────
+  // ── 9. Human-Readable Summary ───────────────────────────────────────
   const safeFmt = (v: number) => {
     if (isNaN(v) || v === Infinity) return "---";
     return Math.abs(v).toLocaleString("en-CA", {
@@ -89,7 +88,7 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
 
   // ── Return ──────────────────────────────────────────────────────────
   return {
-    monthlyCostOfWaiting: round(monthlyDiff),
+    monthlyInterestSavings: round(monthlyDiff),
     totalCostOfWaiting: round(totalCostOfWaiting),
     dailyCostOfWaiting: round(dailyCostOfWaiting),
     paybackPeriodMonths:

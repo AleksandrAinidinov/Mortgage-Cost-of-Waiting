@@ -17,15 +17,21 @@ export interface AnalyzeRequest {
   /** Cost of breaking the current mortgage early ($) — from Penalty Calculator */
   penaltyCost: number;
 
-  /** How many months the user is considering waiting before acting */
+  /** Time (months) the user is considering waiting */
   waitMonths: number;
+
+  // ── Optional Perch-Calculated Overrides ──────────────────────────────
+  /** Total interest savings over the term (from Perch API) */
+  totalInterestSavings?: number;
+  /** Net benefit = savings - penalty (from Perch API) */
+  netBenefit?: number;
 }
 
 // ── Response ───────────────────────────────────────────────────────────
 
 export interface AnalyzeResponse {
-  /** Monthly dollar difference between current rate and offer rate */
-  monthlyCostOfWaiting: number;
+  /** Monthly interest savings if switching today ($) */
+  monthlyInterestSavings: number;
 
   /** Total dollar cost of waiting the specified number of months */
   totalCostOfWaiting: number;
@@ -55,28 +61,13 @@ export interface AnalyzeResponse {
 // ── Full (Perch-Integrated) Request ────────────────────────────────────
 
 export interface FullAnalyzeRequest {
-  // ── Current Mortgage (user-provided) ────────────────────────────────
+  // ── Core Strategy Inputs (Minified) ────────────────────────────────
   currentRate: number;
   remainingBalance: number;
   remainingTermMonths: number;
   waitMonths: number;
-
-  // ── Pathfinder inputs ───────────────────────────────────────────────
-  city: string;
-  province: string;
-  homeValue: number;
-
-  // ── Penalty Calculator inputs ───────────────────────────────────────
   lender: string;
   mortgageRateType: "Fixed" | "Variable";
-  originalTermYears: number;
-  maturityDate: string; // MM/DD/YYYY
-  paymentFrequency: "Monthly" | "Bi-Weekly" | "Accelerated Bi-Weekly" | "Weekly";
-  mortgagePayment: number;
-
-  // ── Optional overrides ──────────────────────────────────────────────
-  hasDefaultInsurance?: boolean;
-  isOwnerOccupied?: boolean;
 }
 
 // ── Full (Perch-Integrated) Response ───────────────────────────────────
@@ -98,5 +89,6 @@ export interface FullAnalyzeResponse extends AnalyzeResponse {
     oldInterest: number;
     newInterest: number;
     difference: number;
+    totalRaw: number;
   };
 }
