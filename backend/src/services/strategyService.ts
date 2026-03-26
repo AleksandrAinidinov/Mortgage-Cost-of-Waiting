@@ -59,8 +59,11 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
   const adjustedBenefit = netBenefitNow - totalCostOfWaiting;
 
   // ── 8. Recommendation Logic ─────────────────────────────────────────
+  // If switching today is profitable (netBenefitNow > 0) AND we have 
+  // positive monthly savings (monthlyDiff > 0), LOCK NOW.
+  // Otherwise, WAIT (either it costs money or there's no bleed to stop).
   const recommendation: "LOCK_NOW" | "WAIT" =
-    adjustedBenefit > 0 ? "LOCK_NOW" : "WAIT";
+    netBenefitNow > 0 && monthlyDiff > 0 ? "LOCK_NOW" : "WAIT";
 
   // ── 9. Human-Readable Summary ───────────────────────────────────────
   const safeFmt = (v: number) => {

@@ -58,8 +58,8 @@ export async function fetchPenaltyCost(
   const parseNumeric = (v: any): number => {
     if (typeof v === "number") return v;
     if (!v) return 0;
-    // Extract digits and dots, stripping common symbols
-    const match = String(v).replace(/,/g, "").match(/(\d+\.?\d*)/);
+    // Extract digits and dots, preserving optional leading minus sign
+    const match = String(v).replace(/,/g, "").match(/(-?\d+\.?\d*)/);
     return match ? Number(match[0]) : 0;
   };
 
@@ -75,9 +75,24 @@ export async function fetchPenaltyCost(
     }
   }
 
+  // ── 0. Lender Normalization ──────────────────────────────────────────
+  // Perch is sensitive to lender names for IRD math. 
+  // Map common long names to their expected short IDs.
+  const normalizeLender = (name: string): string => {
+    const l = name.toLowerCase();
+    if (l.includes("td")) return "TD";
+    if (l.includes("rbc") || l.includes("royal bank")) return "RBC";
+    if (l.includes("bmo") || l.includes("montreal")) return "BMO";
+    if (l.includes("scotia")) return "Scotiabank";
+    if (l.includes("cibc")) return "CIBC";
+    if (l.includes("hsbc")) return "HSBC";
+    if (l.includes("tangerine")) return "Tangerine";
+    return name;
+  };
+
   const payload = {
     // Existing mortgage fields (mortgage1)
-    mortgage1Lender: input.lender,
+    mortgage1Lender: normalizeLender(input.lender),
     mortgage1Principal: input.mortgagePrincipal,
     mortgage1Rate: input.mortgageRate,
     mortgage1RateType: input.mortgageRateType,
@@ -93,7 +108,7 @@ export async function fetchPenaltyCost(
     // New mortgage fields (mortgage3)
     mortgage3Rate: input.newMortgageRate,
     mortgage3RateType: input.newMortgageRateType,
-    mortgagePayment: input.mortgagePayment, // Often sent as a top-level too
+    mortgagePayment: input.mortgagePayment, 
   };
 
   const res = await fetch(PENALTY_URL, {
@@ -101,6 +116,8 @@ export async function fetchPenaltyCost(
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      "Origin": "https://myperch.io",
+      "Referer": "https://myperch.io/tools/penalty-calculator/",
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     },

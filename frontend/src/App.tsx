@@ -179,6 +179,21 @@ function App() {
                     <span style={{ color: "#666" }}>Daily Loss by Waiting</span>
                     <span style={{ fontWeight: 700, color: "#d93025" }}>${result.dailyCostOfWaiting.toFixed(0)}</span>
                   </div>
+
+
+                  <div style={{ background: "#fff4f2", border: "2px solid #d93025", borderRadius: "12px", padding: "20px", marginBottom: "20px", textAlign: "center" }}>
+                    <div style={{ fontSize: "13px", color: "#a33", marginBottom: "6px" }}>
+                      You’re losing
+                    </div>
+
+                    <div style={{ fontSize: "40px", fontWeight: 800, color: "#d93025", lineHeight: 1 }}>
+                      ${result.dailyCostOfWaiting.toFixed(0)}/day
+                    </div>
+
+                    <div style={{ fontSize: "14px", color: "#a33", marginTop: "6px" }}>
+                      by waiting
+                    </div>
+                  </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "#666" }}>Monthly Gain After Switching</span>
                     <span style={{ fontWeight: 700 }}>${result.monthlyInterestSavings.toFixed(0)} / mo</span>
