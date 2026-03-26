@@ -1,0 +1,96 @@
+:root {
+  /* Perch Palette */
+  --perch-green: #2d514c;
+  --perch-green-light: #e6f2f0;
+  --perch-green-muted: #4a6e69;
+  --perch-accent: #f28b82; /* Coral/Peach from 'View offers' button */
+  --perch-accent-hover: #e57373;
+  --perch-bg: #ffffff;
+  --perch-bg-alt: #f8faf9;
+  --perch-border: #e2e8e5;
+  --perch-text: #1a1a1a;
+  --perch-text-muted: #666666;
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --radius: 8px;
+  --font-family: 'Inter', -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--perch-bg-alt);
+  color: var(--perch-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base Styles */
+h1, h2, h3 {
+  font-weight: 600;
+  color: var(--perch-green);
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--perch-border);
+  border-radius: var(--radius);
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+input:focus {
+  border-color: var(--perch-green);
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--perch-text-muted);
+}
+
+/* Layout Utilities */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--perch-border);
+}
+
+.btn-primary {
+  background-color: var(--perch-accent);
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 100px; /* Pill shape from Perch UI */
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.btn-primary:hover {
+  background-color: var(--perch-accent-hover);
+  transform: translateY(-1px);
+}
