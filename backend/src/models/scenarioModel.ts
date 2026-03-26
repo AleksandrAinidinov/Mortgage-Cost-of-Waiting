@@ -51,6 +51,9 @@ export interface AnalyzeResponse {
   /** Net benefit after subtracting the cost of waiting */
   adjustedBenefit: number;
 
+  /** Term length of the best offer in years */
+  offerTermYears: number;
+
   /** The engine's timing recommendation */
   recommendation: "LOCK_NOW" | "WAIT";
 

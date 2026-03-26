@@ -44,15 +44,22 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
   const delayCost = totalCostOfWaiting + penaltyCost;
 
   // ── 5. Net Benefit of Switching Now ─────────────────────────────────
-  const netBenefitNow = perchNetBenefit !== undefined
+  let netBenefitNow = perchNetBenefit !== undefined
     ? perchNetBenefit
     : totalSavings - penaltyCost;
 
+  // ── 5b. Defensive Math ──────────────────────────────────────────────
+  // If we have ZERO or Negative interest savings, we cannot have a positive net benefit.
+  if (totalSavings <= 0 && netBenefitNow > 0) {
+    netBenefitNow = -Math.abs(penaltyCost);
+  }
+
   // ── 6. Break-Even (Hurdle) Rate ─────────────────────────────────────
   // (Market rate must drop by this amount to offset the delay cost)
+  // Formula: DelayCost / (Balance * Term) = Rate drop needed
   const breakEvenRate =
-    remainingBalance > 0
-      ? bestOfferRate - (delayCost / remainingBalance)
+    remainingBalance > 0 && offerTermYears > 0
+      ? bestOfferRate - (delayCost / (remainingBalance * offerTermYears)) * 100
       : bestOfferRate;
 
   // ── 7. Adjusted Benefit ─────────────────────────────────────────────
@@ -68,10 +75,12 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
   // ── 9. Human-Readable Summary ───────────────────────────────────────
   const safeFmt = (v: number) => {
     if (isNaN(v) || v === Infinity) return "---";
-    return Math.abs(v).toLocaleString("en-CA", {
+    // Preservation of sign is critical for honesty
+    const fmt = Math.abs(v).toLocaleString("en-CA", {
       style: "currency",
       currency: "CAD",
     });
+    return v < 0 ? `-${fmt}` : fmt;
   };
 
   const paybackTxt =
@@ -104,6 +113,7 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
     breakEvenRate: round(breakEvenRate),
     netBenefitNow: round(netBenefitNow),
     adjustedBenefit: round(adjustedBenefit),
+    offerTermYears: round(offerTermYears),
     recommendation,
     summary,
   };
