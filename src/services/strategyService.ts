@@ -89,7 +89,7 @@ export function analyzeStrategy(input: AnalyzeRequest): AnalyzeResponse {
     `\nVERDICT:\n` +
     `${recommendation === "LOCK_NOW" ? "Lock now" : "Wait"} — ` +
     `delay only makes sense if rates drop below ${round(breakEvenRate)}%\n\n` +
-    `⚠️ WARNING: If you exit or refinance before ${paybackTxt} → you lose money`;
+    `⚠️ If you exit or refinance before ${paybackTxt} → you lose money`;
 
   // ── Return ──────────────────────────────────────────────────────────
   return {
