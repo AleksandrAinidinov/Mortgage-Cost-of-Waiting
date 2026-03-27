@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import { validatePrecisionRequest } from "../utils/validation";
+import { calculateMonthsRemaining, estimatePayment } from "../utils/parsers";
 import {
   FullAnalyzeRequest,
   FullAnalyzeResponse,
@@ -86,7 +88,7 @@ export const analyzeFull = async (req: Request, res: Response): Promise<void> =>
 
     const analysis = analyzeStrategy(engineInput);
 
-    // 3. Perfected Narrative Response
+    // 3. Full Response with Pathfinder and Penalty data
     // const fullResponse: FullAnalyzeResponse = {
     //   ...analysis,
     // pathfinder: {
@@ -113,53 +115,3 @@ export const analyzeFull = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════
-// Precision Utilities
-// ═══════════════════════════════════════════════════════════════════════
-
-function calculateMonthsRemaining(maturityDateStr: string): number {
-  const maturity = new Date(maturityDateStr);
-  const now = new Date();
-  if (isNaN(maturity.getTime())) return 0;
-
-  const diffYears = maturity.getFullYear() - now.getFullYear();
-  const diffMonths = diffYears * 12 + (maturity.getMonth() - now.getMonth());
-  return Math.max(0, diffMonths);
-}
-
-function estimatePayment(principal: number, rate: number): number {
-  const r = rate / 100 / 12;
-  const n = 25 * 12; // Standard 25yr Amortization
-  if (r === 0) return principal / n;
-  return (principal * r) / (1 - Math.pow(1 + r, -n));
-}
-
-function validatePrecisionRequest(body: Record<string, unknown>): string[] {
-  const errors: string[] = [];
-  const required = ["currentRate", "remainingBalance", "maturityDate", "homeValue", "waitMonths", "lender", "mortgageRateType"];
-
-  for (const field of required) {
-    if (body[field] === undefined || body[field] === null) {
-      errors.push(`${field} is required.`);
-    }
-  }
-
-  if (errors.length === 0) {
-    if (typeof body.currentRate !== "number") errors.push("currentRate must be a number.");
-    else if (body.currentRate < 3.0) errors.push("Rate is too low to be realistic (min 3.0%).");
-    else if (body.currentRate > 20.0) errors.push("Rate is too high to be realistic (max 20.0%).");
-
-    if (typeof body.remainingBalance !== "number") errors.push("remainingBalance must be a number.");
-    else if (body.remainingBalance < 1000) errors.push("Remaining balance must be at least $1,000.");
-
-    if (typeof body.homeValue !== "number") errors.push("homeValue must be a number.");
-    else if (body.homeValue < 1000) errors.push("Home value must be at least $1,000.");
-
-    if (typeof body.maturityDate !== "string") errors.push("maturityDate must be a string (MM/DD/YYYY).");
-    if (body.mortgageRateType !== "Fixed" && body.mortgageRateType !== "Variable") {
-      errors.push("mortgageRateType must be 'Fixed' or 'Variable'.");
-    }
-  }
-
-  return errors;
-}

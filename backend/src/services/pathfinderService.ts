@@ -4,8 +4,10 @@
  * Calls Perch's Pathfinder API to fetch the best available mortgage
  * offers for a Switch/Renewal scenario.
  *
- * Endpoint: POST https://api.production.myperch.io/api/tool/mortgageSel/0
  */
+
+import { PERCH_PATHFINDER_URL } from "../config/constants";
+import { parseNumeric } from "../utils/parsers";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -36,9 +38,6 @@ export interface PathfinderResult {
 }
 
 // ── API Call ────────────────────────────────────────────────────────────
-
-const PATHFINDER_URL =
-  "https://api.production.myperch.io/api/tool/mortgageSel/0";
 
 export async function fetchPathfinderOffers(
   input: PathfinderRequest,
@@ -82,7 +81,7 @@ export async function fetchPathfinderOffers(
     mtg1CustomLender: null,
   };
 
-  const res = await fetch(PATHFINDER_URL, {
+  const res = await fetch(PERCH_PATHFINDER_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -119,13 +118,7 @@ export async function fetchPathfinderOffers(
   // Map raw API offers to typed objects
   const offers: PathfinderOffer[] = (hierarchy as Record<string, unknown>[])
     .map((raw) => {
-      const parseNumeric = (v: any): number => {
-        if (typeof v === "number") return v;
-        if (!v) return 0;
-        // Extract the first sequence of digits and dots (e.g. "3 Years" -> "3", "$4,000" -> "4000")
-        const match = String(v).replace(/,/g, "").match(/(\d+\.?\d*)/);
-        return match ? Number(match[0]) : 0;
-      };
+
 
       const rate = parseNumeric(raw["Net_Rate"]);
       const term = parseNumeric(raw["Term_Yrs"]);
