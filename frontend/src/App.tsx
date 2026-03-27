@@ -2,15 +2,16 @@ import { useState } from "react";
 import axios from "axios";
 import { MortgageForm } from "./components/MortgageForm";
 import { ResultsDashboard } from "./components/ResultsDashboard";
+import { Header } from "./components/Header";
 import { AnalysisResult, FormData } from "./types";
 
 function App() {
   const [formData, setFormData] = useState<FormData>({
-    currentRate: 5.5,
-    remainingBalance: 400000,
+    currentRate: 5.75,
+    remainingBalance: 500000,
     maturityDate: "03/25/2028",
     homeValue: 800000,
-    waitMonths: 6,
+    waitMonths: 3,
     lender: "TD Canada Trust",
     mortgageRateType: "Fixed",
   });
@@ -35,23 +36,9 @@ function App() {
   return (
     <div className="app">
       {/* Header */}
-      <nav style={{ background: "white", borderBottom: "1px solid var(--perch-border)", padding: "16px 0" }}>
-        <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="var(--perch-green)">
-              <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z" />
-            </svg>
-            <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--perch-green)", letterSpacing: "-0.5px" }}>perch</span>
-          </div>
-          <div style={{ display: "flex", gap: "24px", fontSize: "14px", fontWeight: 500 }}>
-            <span>Solutions</span>
-            <span>Tools</span>
-            <span>Learn</span>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
-      {/* Hero Header */}
+      {/* Header 2*/}
       <header style={{ background: "var(--perch-green)", color: "white", padding: "64px 0", textAlign: "center" }}>
         <div className="container">
           <h1 style={{ color: "white", fontSize: "40px", marginBottom: "16px" }}>Are You Losing Money by Waiting?</h1>
@@ -61,8 +48,8 @@ function App() {
 
       <main className="container" style={{ marginTop: "-40px", paddingBottom: "100px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", alignItems: "start" }}>
-          <MortgageForm 
-            formData={formData} 
+          <MortgageForm
+            formData={formData}
             setFormData={setFormData}
             onAnalyze={handleAnalyze}
             loading={loading}
