@@ -21,4 +21,13 @@ It acts as a wrapper around Perch's public APIs to generate a "Time-to-Decision"
 4. Open `http://localhost:5173` in your browser.
 
 ## API Integration Note
-This prototype hits Perch's Pathfinder and Penalty APIs directly to source live market data. The external endpoints are currently stored in `backend/src/config/constants.ts` for quick demo purposes (in a real production environment, they should be moved to `.env`).
+This prototype directly integrates with Perch’s APIs to power the decision engine with real data.
+
+- Uses Perch’s **Pathfinder (rate comparison)** to fetch live mortgage rates and scenarios based on user inputs  
+- Uses Perch’s **Penalty Calculator** to compute accurate IRD-based break costs instead of relying on static formulas  
+- Combines both responses server-side to calculate:
+  - **Daily cost of waiting**
+  - **Break-even rate threshold**
+  - **Net financial impact of switching vs delaying**
+
+For demo purposes, external endpoints are defined in `backend/src/config/constants.ts` (in production, these would be stored in environment variables).
